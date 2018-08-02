@@ -1,10 +1,11 @@
 pub fn find() -> Option<u32> {
     let sum = 1000;
+    let max_a = sum / 3;
 
-    for a in 1..sum {
+    for a in 1..=max_a {
         for b in 1..sum - a {
             let c = sum - a - b;
-            if (c + b + a == sum) && (a * a + b * b == c * c) {
+            if a * a + b * b == c * c {
                 return Some(a * b * c);
             }
         }
