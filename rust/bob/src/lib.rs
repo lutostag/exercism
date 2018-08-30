@@ -1,24 +1,18 @@
 fn yelling(message: &str) -> bool {
-    return message.to_uppercase() == message && message.to_lowercase() != message;
+    message.to_uppercase() == message && message.to_lowercase() != message
 }
 
-fn is_question(message: &str) -> bool {
-    return message.ends_with('?');
+fn question(message: &str) -> bool {
+    message.ends_with('?')
 }
 
 pub fn reply(message: &str) -> &str {
-    let trimmed = message.trim_right();
-    if yelling(trimmed) && is_question(trimmed) {
-        return "Calm down, I know what I'm doing!";
+    let message = message.trim_right();
+    match message {
+        _ if yelling(message) && question(message) => "Calm down, I know what I'm doing!",
+        _ if yelling(message) => "Whoa, chill out!",
+        _ if question(message) => "Sure.",
+        _ if message.is_empty() => "Fine. Be that way!",
+        _ => "Whatever.",
     }
-    if is_question(trimmed) {
-        return "Sure.";
-    }
-    if yelling(trimmed) {
-        return "Whoa, chill out!";
-    }
-    if trimmed == "" {
-        return "Fine. Be that way!";
-    }
-    return "Whatever.";
 }
