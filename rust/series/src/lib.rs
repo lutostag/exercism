@@ -1,13 +1,8 @@
 pub fn series(digits: &str, len: usize) -> Vec<String> {
-    let mut sequences = Vec::new();
-
-    if len > digits.len() {
-        return sequences;
+    match digits.len().checked_sub(len) {
+        None => Vec::new(),
+        Some(items) => (0..=items)
+            .map(|i| String::from(&digits[i..i + len]))
+            .collect(),
     }
-
-    for i in 0..=digits.len() - len {
-        let sequence = String::from(&digits[i..i + len]);
-        sequences.push(sequence);
-    }
-    return sequences;
 }
