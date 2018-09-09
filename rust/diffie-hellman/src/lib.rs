@@ -10,7 +10,7 @@ pub fn private_key(p: u64) -> u64 {
 pub fn public_key(p: u64, g: u64, a: u64) -> u64 {
     let mut expo = a;
     let mut base = g;
-    let mut result: u64 = 1;
+    let mut result = 1;
 
     if p == 1 {
         return 0;
