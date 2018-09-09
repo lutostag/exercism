@@ -8,5 +8,5 @@ pub fn nth(n: u32) -> Option<u32> {
         }
         current += 1;
     }
-    return primes.pop();
+    primes.last()
 }
