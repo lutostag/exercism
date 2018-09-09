@@ -1,17 +1,15 @@
 pub fn is_armstrong_number(num: u32) -> bool {
-    let mut sum = Some(0u32);
-    let mut current = num;
+    let mut sum = 0_u32;
+    let mut cur = num;
 
     let digits = num.to_string().len() as u32;
-    for _ in 1..=digits {
-        let add = (current % 10).pow(digits);
-        current /= 10;
-
+    while cur > 0 {
         // use a checked_add to not panic if we overflow
-        sum = sum.unwrap().checked_add(add);
-        if sum.is_none() {
-            return false;
+        match sum.checked_add((cur % 10).pow(digits)) {
+            Some(safe) => sum = safe,
+            None => return false,
         }
+        cur /= 10;
     }
-    return sum.unwrap() == num;
+    sum == num
 }
