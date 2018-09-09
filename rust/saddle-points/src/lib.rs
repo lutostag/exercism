@@ -1,36 +1,58 @@
-extern crate ndarray;
-
-use ndarray::prelude::*;
+use std::cmp::Ordering;
 use std::collections::HashSet;
 
-fn find<F>(input: &[u64], value: &u64, index: F) -> Vec<(usize, usize)>
+fn find_indexes<F>(input: &[&u64], ordering: Ordering, reindex: F) -> Vec<(usize, usize)>
 where
     F: Fn(usize) -> (usize, usize),
 {
+    let mut min_or_max: Option<&u64> = None;
     input
         .iter()
         .enumerate()
-        .filter_map(|(idx, x)| if value == x { Some(index(idx)) } else { None })
-        .collect()
+        .fold(
+            Vec::<(usize, usize)>::new(),
+            |mut vector, (idx, &x)| match min_or_max {
+                None => {
+                    min_or_max = Some(x);
+                    vec![reindex(idx)]
+                }
+                Some(current) => match x.cmp(current) {
+                    order if order == ordering => {
+                        min_or_max = Some(x);
+                        vec![reindex(idx)]
+                    }
+                    Ordering::Equal => {
+                        vector.push(reindex(idx));
+                        vector
+                    }
+                    _ => vector,
+                },
+            },
+        )
 }
 
 pub fn find_saddle_points(input: &[Vec<u64>]) -> Vec<(usize, usize)> {
-    let flat: Vec<u64> = input.iter().flat_map(|x| x.clone()).collect();
-    let arr = Array::from_shape_vec((input.len(), flat.len() / input.len()), flat).unwrap();
-
-    let mut maxs: HashSet<(usize, usize)> = HashSet::new();
-    for (row_idx, row) in input.iter().enumerate() {
-        let max = row.iter().max().unwrap();
-        maxs.extend(find(&row, max, |i| (row_idx, i)));
-    }
-
+    let mut maxs: Vec<(usize, usize)> = Vec::new();
     let mut mins: HashSet<(usize, usize)> = HashSet::new();
-    for (col_idx, col_view) in arr.lanes(Axis(0)).into_iter().enumerate() {
-        let col: Vec<u64> = col_view.iter().map(|x| x.clone()).collect();
-        let min = col.iter().min().unwrap();
-        mins.extend(find(&col, min, |i| (i, col_idx)));
+
+    let flat: Vec<&u64> = input.iter().flat_map(|x| x).collect();
+    let (height, width) = (input.len(), flat.len() / input.len());
+    if height == 0 || width == 0 {
+        return maxs;
     }
-    let mut value: Vec<(usize, usize)> = maxs.intersection(&mins).map(|x| x.clone()).collect();
-    value.sort_unstable();
-    value
+
+    for (row_idx, row) in flat.chunks(width).enumerate() {
+        maxs.extend(find_indexes(&row, Ordering::Greater, |i| (row_idx, i)));
+    }
+
+    for col_idx in 0..width {
+        let col: Vec<&u64> = (col_idx..flat.len())
+            .step_by(width)
+            .map(|x| flat[x])
+            .collect();
+        mins.extend(find_indexes(&col, Ordering::Less, |i| (i, col_idx)));
+    }
+
+    maxs.retain(|&x| mins.contains(&x));
+    maxs
 }
