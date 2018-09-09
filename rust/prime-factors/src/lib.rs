@@ -1,14 +1,14 @@
 pub fn factors(n: u64) -> Vec<u64> {
     let mut prime_factors = Vec::new();
-    let mut factored = n;
-    let mut possible = 2_u64;
+    let mut n = n;
+    let mut factor = 2_u64;
     
-    while factored > 1 {
-        while factored % possible == 0 {
-            factored /= possible;
-            prime_factors.push(possible);
+    while n > 1 {
+        while n % factor == 0 {
+            n /= factor;
+            prime_factors.push(factor);
         }
-        possible += 1;
+        factor += 1;
     }
-    return prime_factors;
+    prime_factors
 }
