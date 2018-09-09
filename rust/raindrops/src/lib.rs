@@ -9,8 +9,10 @@ pub fn raindrops(n: usize) -> String {
     if n % 7 == 0 {
         raindrop += "Plong";
     }
-    if raindrop == "" {
-        return n.to_string();
+
+    if raindrop.is_empty() {
+        n.to_string()
+    } else {
+        raindrop
     }
-    return raindrop;
 }
