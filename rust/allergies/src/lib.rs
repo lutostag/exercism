@@ -1,17 +1,24 @@
+#[macro_use]
+extern crate custom_derive;
+#[macro_use]
+extern crate enum_derive;
+
 pub struct Allergies {
     score: u32,
 }
 
-#[derive(Debug, PartialEq, Clone, Copy)]
-pub enum Allergen {
-    Eggs = 1,
-    Peanuts = 2,
-    Shellfish = 4,
-    Strawberries = 8,
-    Tomatoes = 16,
-    Chocolate = 32,
-    Pollen = 64,
-    Cats = 128,
+custom_derive! {
+    #[derive(Debug, PartialEq, Clone, Copy, IterVariants(Var))]
+    pub enum Allergen {
+        Eggs = 1,
+        Peanuts = 2,
+        Shellfish = 4,
+        Strawberries = 8,
+        Tomatoes = 16,
+        Chocolate = 32,
+        Pollen = 64,
+        Cats = 128,
+    }
 }
 
 impl Allergies {
@@ -24,17 +31,8 @@ impl Allergies {
     }
 
     pub fn allergies(&self) -> Vec<Allergen> {
-        let mut allergens = vec![
-            Allergen::Eggs,
-            Allergen::Peanuts,
-            Allergen::Shellfish,
-            Allergen::Strawberries,
-            Allergen::Tomatoes,
-            Allergen::Chocolate,
-            Allergen::Pollen,
-            Allergen::Cats,
-        ];
-        allergens.retain(|a| self.is_allergic_to(&a));
-        allergens
+        Allergen::iter_variants()
+            .filter(|a| self.is_allergic_to(&a))
+            .collect()
     }
 }
