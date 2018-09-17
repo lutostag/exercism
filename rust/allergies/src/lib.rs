@@ -2,16 +2,16 @@ pub struct Allergies {
     score: u32,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub enum Allergen {
-    Eggs,
-    Peanuts,
-    Shellfish,
-    Strawberries,
-    Tomatoes,
-    Chocolate,
-    Pollen,
-    Cats,
+    Eggs = 1,
+    Peanuts = 2,
+    Shellfish = 4,
+    Strawberries = 8,
+    Tomatoes = 16,
+    Chocolate = 32,
+    Pollen = 64,
+    Cats = 128,
 }
 
 impl Allergies {
@@ -20,26 +20,21 @@ impl Allergies {
     }
 
     pub fn is_allergic_to(&self, allergen: &Allergen) -> bool {
-        self.allergies().contains(&allergen)
+        (*allergen as u32 & self.score) > 0
     }
 
     pub fn allergies(&self) -> Vec<Allergen> {
-        (0..8)
-            .filter_map(|b| Allergies::score_to_allergen(1 << b & self.score as u8))
-            .collect()
-    }
-
-    fn score_to_allergen(score: u8) -> Option<Allergen> {
-        match score {
-            1 => Some(Allergen::Eggs),
-            2 => Some(Allergen::Peanuts),
-            4 => Some(Allergen::Shellfish),
-            8 => Some(Allergen::Strawberries),
-            16 => Some(Allergen::Tomatoes),
-            32 => Some(Allergen::Chocolate),
-            64 => Some(Allergen::Pollen),
-            128 => Some(Allergen::Cats),
-            _ => None,
-        }
+        let mut allergens = vec![
+            Allergen::Eggs,
+            Allergen::Peanuts,
+            Allergen::Shellfish,
+            Allergen::Strawberries,
+            Allergen::Tomatoes,
+            Allergen::Chocolate,
+            Allergen::Pollen,
+            Allergen::Cats,
+        ];
+        allergens.retain(|a| self.is_allergic_to(&a));
+        allergens
     }
 }
