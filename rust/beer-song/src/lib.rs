@@ -1,22 +1,21 @@
 pub fn verse(n: i32) -> String {
+    let bottles = |n| match n {
+        0 => format!("no more bottles"),
+        1 => format!("1 bottle"),
+        n => format!("{} bottles", n),
+    };
+
     match n {
         0 => format!(
             "No more bottles of beer on the wall, no more bottles of beer.\n\
              Go to the store and buy some more, 99 bottles of beer on the wall.\n"
         ),
-        1 => format!(
-            "1 bottle of beer on the wall, 1 bottle of beer.\n\
-             Take it down and pass it around, no more bottles of beer on the wall.\n"
-        ),
-        2 => format!(
-            "2 bottles of beer on the wall, 2 bottles of beer.\n\
-             Take one down and pass it around, 1 bottle of beer on the wall.\n"
-        ),
-        _ => format!(
-            "{n} bottles of beer on the wall, {n} bottles of beer.\n\
-             Take one down and pass it around, {n_minus_one} bottles of beer on the wall.\n",
-            n = n,
-            n_minus_one = n - 1
+        n => format!(
+            "{bottles} of beer on the wall, {bottles} of beer.\n\
+             Take {one} down and pass it around, {one_fewer_bottles} of beer on the wall.\n",
+            bottles = bottles(n),
+            one = if n > 1 { "one" } else { "it" },
+            one_fewer_bottles = bottles(n - 1)
         ),
     }
 }
