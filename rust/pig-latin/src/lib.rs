@@ -21,6 +21,6 @@ pub fn translate(input: &str) -> String {
     input
         .split(" ")
         .map(translate_word)
-        .collect::<Vec<String>>()
+        .collect::<Vec<_>>()
         .join(" ")
 }
