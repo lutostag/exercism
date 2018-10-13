@@ -1,6 +1,6 @@
 pub fn encode(source: &str) -> String {
-    let mut chars = source.chars().peekable();
     let mut encoded = String::new();
+    let mut chars = source.chars().peekable();
     let mut count = 1;
 
     while let Some(c) = chars.next() {
@@ -22,8 +22,8 @@ pub fn decode(source: &str) -> String {
     let mut count = 0;
 
     for c in source.chars() {
-        if c.is_digit(10) {
-            count = count * 10 + c.to_digit(10).unwrap();
+        if let Some(d) = c.to_digit(10) {
+            count = count * 10 + d;
         } else {
             if count == 0 {
                 count = 1;
