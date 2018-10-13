@@ -1,3 +1,26 @@
+const SECTIONS: [&'static str; 7] = [
+    "",
+    " thousand",
+    " million",
+    " billion",
+    " trillion",
+    " quadrillion",
+    " quintillion",
+];
+
+fn encode_larger(n: u64) -> String {
+    let mut sections = Vec::with_capacity(SECTIONS.len());
+    let mut n = n;
+    for section_name in SECTIONS.iter() {
+        let section = n % 1000;
+        if section != 0 {
+            sections.insert(0, format!("{}{}", encode(section), section_name));
+        }
+        n /= 1000;
+    }
+    sections.join(" ")
+}
+
 pub fn encode(n: u64) -> String {
     match n {
         0 => format!("zero"),
@@ -27,22 +50,6 @@ pub fn encode(n: u64) -> String {
         21...99 => format!("{}-{}", encode(n - (n % 10)), encode(n % 10)),
         100...900 if n % 100 == 0 => format!("{} hundred", encode(n / 100)),
         100...999 => format!("{} {}", encode(n - (n % 100)), encode(n % 100)),
-        _ => [
-            "",
-            " thousand",
-            " million",
-            " billion",
-            " trillion",
-            " quadrillion",
-            " quintillion",
-        ]
-            .iter()
-            .enumerate()
-            .filter_map(|(idx, &sep)| match (n / 1000_u64.pow(idx as u32)) % 1000 {
-                0 => None,
-                part => Some(format!("{}{}", encode(part), &sep)),
-            }).rev()
-            .collect::<Vec<String>>()
-            .join(" "),
+        _ => encode_larger(n),
     }
 }
