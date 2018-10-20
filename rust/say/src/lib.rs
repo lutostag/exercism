@@ -38,6 +38,7 @@ pub fn encode(n: u64) -> String {
         12 => format!("twelve"),
         13 => format!("thirteen"),
         15 => format!("fifteen"),
+        18 => format!("eighteen"),
         13...19 => format!("{}teen", encode(n % 10)),
         20 => format!("twenty"),
         30 => format!("thirty"),
