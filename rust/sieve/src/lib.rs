@@ -1,18 +1,18 @@
 pub fn primes_up_to(upper_bound: usize) -> Vec<u64> {
-    let mut numbers = vec![true; upper_bound + 1];
+    let mut sieve = vec![true; upper_bound + 1];
     let mut primes = Vec::new();
-    let mut prime = 2;
-    while prime <= upper_bound {
-        primes.push(prime as u64);
-        numbers[prime..].iter_mut().step_by(prime).for_each(
-            |b| *b = false,
+    let mut next = Some(2);
+    while let Some(prime) = next {
+        if prime <= upper_bound {
+            primes.push(prime as u64);
+        }
+        sieve.iter_mut().step_by(prime).skip(1).for_each(
+            |p| *p = false,
         );
 
-        let next = numbers[prime..].iter().position(|&b| b).map(|p| p + prime);
-        match next {
-            Some(n) => prime = n,
-            None => break,
-        };
+        next = sieve.iter().skip(prime + 1).position(|&p| p).map(|idx| {
+            idx + prime + 1
+        });
     }
     primes
 }
