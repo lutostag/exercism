@@ -1,8 +1,3 @@
-use std::collections::HashMap;
-
-static DNA_NUCLEOTIDES: &'static [char] = &['G', 'C', 'T', 'A'];
-static RNA_NUCLEOTIDES: &'static [char] = &['C', 'G', 'A', 'U'];
-
 #[derive(Debug, PartialEq)]
 pub struct DNA {
     sequence: String,
@@ -23,24 +18,30 @@ fn check_sequence(sequence: &str, allowed: &[char]) -> Result<String, usize> {
 }
 
 impl DNA {
+    const NUCLEOTIDES: &'static [char] = &['G', 'C', 'T', 'A'];
     pub fn new(dna: &str) -> Result<DNA, usize> {
-        check_sequence(dna, DNA_NUCLEOTIDES).map(|s| DNA { sequence: s })
+        check_sequence(dna, DNA::NUCLEOTIDES).map(|s| DNA { sequence: s })
     }
 
-    pub fn to_rna(self) -> RNA {
-        let dna_to_rna: HashMap<_, _> =
-            DNA_NUCLEOTIDES.iter().zip(RNA_NUCLEOTIDES.iter()).collect();
+    pub fn to_rna(&self) -> RNA {
         let sequence = self.sequence
             .chars()
-            .map(|n| dna_to_rna.get(&n).unwrap().clone())
-            .collect::<String>();
+            .map(|n| match n {
+                'G' => 'C',
+                'C' => 'G',
+                'T' => 'A',
+                'A' => 'U',
+                _ => unreachable!(),
+            })
+            .collect();
 
         RNA { sequence }
     }
 }
 
 impl RNA {
+    const NUCLEOTIDES: &'static [char] = &['C', 'G', 'A', 'U'];
     pub fn new(rna: &str) -> Result<RNA, usize> {
-        check_sequence(rna, RNA_NUCLEOTIDES).map(|s| RNA { sequence: s })
+        check_sequence(rna, RNA::NUCLEOTIDES).map(|s| RNA { sequence: s })
     }
 }
