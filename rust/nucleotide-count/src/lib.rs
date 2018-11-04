@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-const VALID_NUCLEOTIDES: &'static [char; 4] = &['A', 'C', 'T', 'G'];
+const VALID_NUCLEOTIDES: &[char] = &['A', 'C', 'T', 'G'];
 
 
 pub fn count(nucleotide: char, dna: &str) -> Result<usize, char> {
@@ -15,7 +15,7 @@ pub fn count(nucleotide: char, dna: &str) -> Result<usize, char> {
 }
 
 pub fn nucleotide_counts(dna: &str) -> Result<HashMap<char, usize>, char> {
-    let mut counts = HashMap::new();
+    let mut counts = HashMap::with_capacity(VALID_NUCLEOTIDES.len());
     for &nuc in VALID_NUCLEOTIDES {
         counts.insert(nuc, count(nuc, dna)?);
     }
