@@ -1,18 +1,18 @@
+fn primes_from<'a>(sieve: &'a Vec<bool>) -> impl Iterator<Item = usize> + 'a {
+    sieve.iter().enumerate().filter_map(|(idx, &p)| match p {
+        true => Some(idx),
+        false => None,
+    })
+}
+
 pub fn primes_up_to(upper_bound: usize) -> Vec<u64> {
     let mut sieve = vec![true; upper_bound + 1];
-    let mut primes = Vec::new();
+    sieve[0] = false;
+    sieve[1] = false;
     let mut next = Some(2);
     while let Some(prime) = next {
-        if prime <= upper_bound {
-            primes.push(prime as u64);
-        }
-        sieve.iter_mut().step_by(prime).skip(1).for_each(
-            |p| *p = false,
-        );
-
-        next = sieve.iter().skip(prime + 1).position(|&p| p).map(|idx| {
-            idx + prime + 1
-        });
+        sieve.chunks_mut(prime).skip(2).for_each(|p| p[0] = false);
+        next = primes_from(&sieve).skip_while(|&p| p <= prime).next();
     }
-    primes
+    (move || primes_from(&sieve).map(|p| p as u64).collect())()
 }
