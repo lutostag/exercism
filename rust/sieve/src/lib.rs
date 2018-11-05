@@ -14,5 +14,5 @@ pub fn primes_up_to(upper_bound: usize) -> Vec<u64> {
         sieve.chunks_mut(prime).skip(2).for_each(|p| p[0] = false);
         next = primes_from(&sieve).skip_while(|&p| p <= prime).next();
     }
-    (move || primes_from(&sieve).map(|p| p as u64).collect())()
+    return primes_from(&sieve).map(|p| p as u64).collect();
 }
