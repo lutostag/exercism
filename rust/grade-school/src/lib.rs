@@ -1,32 +1,26 @@
-use std::collections::HashMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 pub struct School {
-    data: HashMap<u32, Vec<String>>,
+    grades: BTreeMap<u32, BTreeSet<String>>,
 }
 
 impl School {
     pub fn new() -> School {
         School {
-            data: HashMap::new(),
+            grades: BTreeMap::new(),
         }
     }
 
     pub fn add(&mut self, grade: u32, student: &str) {
-        let students = self.data.entry(grade).or_insert(Vec::new());
-        students.push(student.to_string());
+        let students = self.grades.entry(grade).or_insert(BTreeSet::new());
+        students.insert(student.to_string());
     }
 
     pub fn grades(&self) -> Vec<u32> {
-        let mut grades: Vec<u32> = self.data.keys().cloned().collect();
-        grades.sort();
-        grades
+        self.grades.keys().cloned().collect()
     }
 
     pub fn grade(&self, grade: u32) -> Option<Vec<String>> {
-        self.data.get(&grade).map(|v| {
-            let mut v = v.clone();
-            v.sort();
-            v
-        })
+        self.grades.get(&grade).map(|s| s.iter().cloned().collect())
     }
 }
