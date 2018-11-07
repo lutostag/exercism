@@ -4,7 +4,10 @@ pub struct Triangle<T> {
     sides: [T; 3],
 }
 
-impl<T> Triangle<T> where T: std::hash::Hash + std::cmp::Ord {
+impl<T> Triangle<T>
+where
+    T: std::hash::Hash + std::cmp::Ord,
+{
     fn uniq_sides(&self) -> usize {
         self.sides.iter().collect::<HashSet<&T>>().len()
     }
@@ -22,26 +25,24 @@ impl<T> Triangle<T> where T: std::hash::Hash + std::cmp::Ord {
     }
 }
 
-impl Triangle<u64> {
-    pub fn build(sides: [u64; 3]) -> Option<Triangle<u64>> {
-        let min: &u64 = sides.iter().min().unwrap();
-        let max: &u64 = sides.iter().max().unwrap();
-        let sum: u64 = sides.iter().sum();
-        if min <= &0 || (2 * max) > sum {
+impl<'a, T: 'a> Triangle<T>
+where
+    T: std::cmp::Ord
+        + std::iter::Sum<T>
+        + std::ops::Add<T, Output = T>
+        + std::marker::Copy
+        + std::convert::From<u8>,
+    &'a T: std::cmp::PartialOrd,
+{
+    pub fn build(sides: [T; 3]) -> Option<Triangle<T>> {
+        let max = sides.iter().cloned().max().unwrap();
+        let min = sides.iter().cloned().min().unwrap();
+        let twice_max = max + max;
+        let sum = sides.iter().cloned().sum();
+        let zero = T::from(0u8);
+        if min <= zero || twice_max > sum {
             return None;
         }
         Some(Triangle { sides })
     }
 }
-
-// impl<'a, T> Triangle<&'a T> where T: std::cmp::Ord + std::iter::Sum<&'a T>, &'a T: std::cmp::PartialOrd + std::ops::Add<&'a T> {
-//     pub fn build(sides: [T; 3]) -> Option<Triangle<T>> {
-//         let max: &T = sides.iter().max().unwrap();
-//         let sum: T = sides.iter().sum();
-//         if sides.contains(&0) || (max + max) > sum {
-//             return None;
-//         }
-//         Some(Triangle { sides })
-//     }
-// }
-
