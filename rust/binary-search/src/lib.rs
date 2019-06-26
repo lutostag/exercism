@@ -1,15 +1,11 @@
 pub fn find(array: &[i32], key: i32) -> Option<usize> {
-    fn find_recursive(array: &[i32], key: i32, offset: usize) -> Option<usize> {
-        let pivot = array.len() / 2;
+    let pivot = array.len() / 2;
 
-        match array.len() {
-            0 => None,
-            1 if key == array[0] => Some(offset),
-            1 => None,
-            _ if key == array[pivot] => Some(offset + pivot),
-            _ if key < array[pivot] => find_recursive(&array[..pivot], key, offset),
-            _ => find_recursive(&array[pivot..], key, offset + pivot),
-        }
+    match array.len() {
+        1 if key == array[0] => Some(0),
+        0 | 1 => None,
+        _ if key == array[pivot] => Some(pivot),
+        _ if key < array[pivot] => find(&array[..pivot], key),
+        _ => find(&array[pivot..], key).map(|o| o + pivot),
     }
-    find_recursive(array, key, 0)
 }
