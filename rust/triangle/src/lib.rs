@@ -25,13 +25,13 @@ where
     }
 }
 
-impl<'a, T: 'a> Triangle<T>
+impl<T> Triangle<T>
 where
     T: Copy + Default + std::cmp::Ord + std::ops::Add<T, Output = T>,
 {
     pub fn build(sides: [T; 3]) -> Option<Triangle<T>> {
-        let min = *sides.iter().min().unwrap();
-        let max = *sides.iter().max().unwrap();
+        let min = *sides.iter().min()?;
+        let max = *sides.iter().max()?;
         let sum = sides.iter().fold(T::default(), |s, &i| s + i);
         if min <= T::default() || (max + max) > sum {
             return None;
