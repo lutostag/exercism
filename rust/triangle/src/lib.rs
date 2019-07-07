@@ -27,20 +27,13 @@ where
 
 impl<'a, T: 'a> Triangle<T>
 where
-    T: std::ops::Add<T, Output = T>
-        + std::cmp::Ord
-        + std::iter::Sum<T>
-        + std::marker::Copy
-        + std::convert::From<u8>,
-    &'a T: std::cmp::PartialOrd,
+    T: Copy + Default + std::cmp::Ord + std::ops::Add<T, Output = T>,
 {
     pub fn build(sides: [T; 3]) -> Option<Triangle<T>> {
-        let max = sides.iter().max().unwrap().clone();
-        let min = sides.iter().min().unwrap().clone();
-        let twice_max = max + max;
-        let sum = sides.iter().cloned().sum();
-        let zero = T::from(0u8);
-        if min <= zero || twice_max > sum {
+        let min = *sides.iter().min().unwrap();
+        let max = *sides.iter().max().unwrap();
+        let sum = sides.iter().fold(T::default(), |s, &i| s + i);
+        if min <= T::default() || (max + max) > sum {
             return None;
         }
         Some(Triangle { sides })
