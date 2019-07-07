@@ -160,3 +160,35 @@ fn isosceles_triangle_with_floating_point_sides() {
     assert!(triangle.is_isosceles());
     assert!(!triangle.is_scalene());
 }
+
+#[test]
+#[ignore]
+#[cfg(feature = "generic")]
+fn triangle_with_non_numeric_floating_point_sides_is_illegal() {
+    let sides = [std::f32::NAN, 0.4, 0.4];
+    assert!(Triangle::build(sides).is_none());
+}
+
+#[test]
+#[ignore]
+#[cfg(feature = "generic")]
+fn triangle_with_invalid_max_floating_point_sides() {
+    let sides = [std::f32::MAX, 0.4, 0.4];
+    assert!(Triangle::build(sides).is_none());
+}
+
+#[test]
+#[ignore]
+#[cfg(feature = "generic")]
+fn triangle_with_valid_max_floating_point_sides() {
+    let sides = [std::f32::MAX, std::f32::MAX, 0.4];
+    assert!(Triangle::build(sides).unwrap().is_isosceles());
+}
+
+#[test]
+#[ignore]
+#[cfg(feature = "generic")]
+fn triangle_with_infinity_floating_point_sides_is_illegal() {
+    let sides = [std::f32::INFINITY, std::f32::INFINITY, 0.4];
+    assert!(Triangle::build(sides).is_none());
+}
