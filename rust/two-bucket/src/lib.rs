@@ -1,111 +1,121 @@
 use std::cmp::min;
 use std::collections::{HashSet, VecDeque};
+use std::ops::Not;
 
-#[derive(PartialEq, Eq, Debug)]
+#[derive(PartialEq, Eq, Debug, Clone, Copy)]
 pub enum Bucket {
-    One,
-    Two,
+    One = 0,
+    Two = 1,
 }
 
-/// A struct to hold your results in.
+impl Not for Bucket {
+    type Output = Bucket;
+    fn not(self) -> Self::Output {
+        match self {
+            Bucket::One => Bucket::Two,
+            Bucket::Two => Bucket::One,
+        }
+    }
+}
+
 #[derive(PartialEq, Eq, Debug)]
 pub struct BucketStats {
-    /// The total number of "moves" it should take to reach the desired number of liters, including
-    /// the first fill.
     pub moves: u8,
-    /// Which bucket should end up with the desired number of liters? (Either "one" or "two")
     pub goal_bucket: Bucket,
-    /// How many liters are left in the other bucket?
     pub other_bucket: u8,
 }
 
-#[derive(PartialEq, Hash, Eq, Debug)]
-struct BucketStates {
+#[derive(Debug, Copy, Clone)]
+struct Buckets {
     pub moves: u8,
-    pub fullness: (u8, u8),
+    pub buckets: [(u8, u8); 2],
 }
 
-/// Solve the bucket problem
+impl Buckets {
+    fn setup(capacity_1: u8, capacity_2: u8, start_full: Bucket) -> Self {
+        let state = Buckets {
+            moves: 0,
+            buckets: [(capacity_1, 0), (capacity_2, 0)],
+        };
+        state.fill(start_full)
+    }
+
+    fn dump(&self, bucket: Bucket) -> Self {
+        let mut buckets = self.buckets.clone();
+        buckets[bucket as usize].1 = 0;
+
+        Buckets {
+            moves: self.moves + 1,
+            buckets,
+        }
+    }
+
+    fn fill(&self, bucket: Bucket) -> Self {
+        let mut buckets = self.buckets.clone();
+        buckets[bucket as usize].1 = buckets[bucket as usize].0;
+
+        Buckets {
+            moves: self.moves + 1,
+            buckets,
+        }
+    }
+
+    fn transfer_to(&self, bucket_idx: Bucket) -> Self {
+        let mut buckets = self.buckets.clone();
+        let bucket = buckets[bucket_idx as usize];
+        let other = buckets[!bucket_idx as usize];
+        let total = bucket.1 + other.1;
+        buckets[bucket_idx as usize].1 = min(total, bucket.0);
+        buckets[!bucket_idx as usize].1 = total.checked_sub(bucket.0).unwrap_or(0);
+
+        Buckets {
+            moves: self.moves + 1,
+            buckets,
+        }
+    }
+
+    fn is_illegal(&self, start_bucket: Bucket) -> bool {
+        let bucket = self.buckets[start_bucket as usize];
+        let other = self.buckets[!start_bucket as usize];
+        bucket.1 == 0 && other.1 == other.0
+    }
+
+    fn goal(&self, amount: u8) -> Option<BucketStats> {
+        for &bucket in &[Bucket::One, Bucket::Two] {
+            if self.buckets[bucket as usize].1 == amount {
+                return Some(BucketStats {
+                    moves: self.moves,
+                    goal_bucket: bucket,
+                    other_bucket: self.buckets[!bucket as usize].1,
+                });
+            }
+        }
+        None
+    }
+}
+
+/// Solve the bucket problem use a BFS
 pub fn solve(capacity_1: u8, capacity_2: u8, goal: u8, start_bucket: &Bucket) -> BucketStats {
-    let mut pours = VecDeque::<BucketStates>::new();
-    let mut hit_states = HashSet::new();
-    pours.push_back(match start_bucket {
-        Bucket::One => {
-            hit_states.insert((0, capacity_2));
-            BucketStates {
-                moves: 0,
-                fullness: (capacity_1, 0),
-            }
-        }
-        Bucket::Two => {
-            hit_states.insert((capacity_1, 0));
-            BucketStates {
-                moves: 0,
-                fullness: (0, capacity_2),
-            }
-        }
-    });
+    let mut pours = VecDeque::<Buckets>::new();
+    let mut already_tried = HashSet::new();
+    pours.push_back(Buckets::setup(capacity_1, capacity_2, *start_bucket));
 
-    while let Some(state) = pours.pop_front() {
-        let moves = state.moves + 1;
-        
-        // check if current state is the goal
-        if state.fullness.0 == goal {
-            return BucketStats {
-                moves,
-                goal_bucket: Bucket::One,
-                other_bucket: state.fullness.1,
-            };
-        } else if state.fullness.1 == goal {
-            return BucketStats {
-                moves,
-                goal_bucket: Bucket::Two,
-                other_bucket: state.fullness.0,
-            };
-        }
-
-        // Prevent revisiting state
-        if hit_states.contains(&state.fullness) {
+    while let Some(buckets) = pours.pop_front() {
+        if buckets.is_illegal(*start_bucket) {
             continue;
         }
-        hit_states.insert(state.fullness);
+        if let Some(stats) = buckets.goal(goal) {
+            return stats;
+        }
 
-        // Dump bucket
-        pours.push_back(BucketStates {
-            moves,
-            fullness: (state.fullness.0, 0),
-        });
-        pours.push_back(BucketStates {
-            moves,
-            fullness: (0, state.fullness.1),
-        });
-
-        // Fill bucket
-        pours.push_back(BucketStates {
-            moves,
-            fullness: (state.fullness.0, capacity_2),
-        });
-        pours.push_back(BucketStates {
-            moves,
-            fullness: (capacity_1, state.fullness.1),
-        });
-
-        // Transfer bucket
-        let total = state.fullness.0 + state.fullness.1;
-        pours.push_back(BucketStates {
-            moves,
-            fullness: (
-                total.checked_sub(capacity_2).unwrap_or(0),
-                min(total, capacity_2),
-            ),
-        });
-        pours.push_back(BucketStates {
-            moves,
-            fullness: (
-                min(total, capacity_1),
-                total.checked_sub(capacity_1).unwrap_or(0),
-            ),
-        });
+        if already_tried.insert(buckets.buckets) {
+            pours.push_back(buckets.dump(Bucket::One));
+            pours.push_back(buckets.dump(Bucket::Two));
+            pours.push_back(buckets.fill(Bucket::One));
+            pours.push_back(buckets.fill(Bucket::Two));
+            pours.push_back(buckets.transfer_to(Bucket::One));
+            pours.push_back(buckets.transfer_to(Bucket::Two));
+        }
     }
     unreachable!();
 }
