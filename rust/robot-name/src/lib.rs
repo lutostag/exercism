@@ -8,7 +8,6 @@ lazy_static! {
     static ref ROBOTS: Mutex<HashSet<String>> = Mutex::new(HashSet::new());
 }
 
-#[derive(Hash, PartialEq, Eq)]
 pub struct Robot {
     name: String,
 }
@@ -16,23 +15,20 @@ pub struct Robot {
 fn create_name() -> String {
     let letter = || thread_rng().gen_range(b'A', b'Z' + 1) as char;
     let digit = || thread_rng().gen_range(b'0', b'9' + 1) as char;
-    let mut name;
     loop {
-        name = format!("{}{}{}{}{}", letter(), letter(), digit(), digit(), digit());
+        let name = format!("{}{}{}{}{}", letter(), letter(), digit(), digit(), digit());
         let mut robots = ROBOTS.lock().unwrap();
         if robots.len() >= 26 * 26 * 10 * 10 * 10 {
             drop(robots); // prevents poisoning of mutex but can still panic in this thread
-            panic!("No unique robot names left")
-        } else if robots.insert(name.to_string()) {
-            break;
+            panic!("No unique robot names left");
+        } else if robots.insert(name.clone()) {
+            return name;
         }
     }
-    name
 }
 
 fn delete_name(name: &str) -> () {
-    let mut robots = ROBOTS.lock().unwrap();
-    robots.remove(name);
+    ROBOTS.lock().unwrap().remove(name);
 }
 
 impl Robot {
