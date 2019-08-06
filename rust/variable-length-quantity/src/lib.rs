@@ -7,7 +7,6 @@ pub enum Error {
 const MASK: u32 = 0b01111111;
 const HIGH: u32 = 0b10000000;
 
-
 /// Convert a list of numbers to a stream of bytes encoded with variable length encoding.
 pub fn to_bytes(values: &[u32]) -> Vec<u8> {
     let mut bytes = Vec::new();
@@ -24,10 +23,15 @@ pub fn to_bytes(values: &[u32]) -> Vec<u8> {
 
 /// Given a stream of bytes, extract all numbers which are encoded in there.
 pub fn from_bytes(bytes: &[u8]) -> Result<Vec<u32>, Error> {
+    if let Some(last) = bytes.last() {
+        if last & (HIGH as u8) != 0 {
+            return Err(Error::IncompleteNumber);
+        }
+    }
+
     let mut numbers = Vec::new();
     let mut number: u32 = 0;
-
-    for (idx, &byte) in bytes.iter().enumerate() {
+    for &byte in bytes.iter() {
         if number.leading_zeros() < 7 {
             return Err(Error::Overflow);
         }
@@ -35,8 +39,6 @@ pub fn from_bytes(bytes: &[u8]) -> Result<Vec<u32>, Error> {
         if (byte & (HIGH as u8)) == 0 {
             numbers.push(number);
             number = 0;
-        } else if idx == bytes.len() - 1 {
-            return Err(Error::IncompleteNumber);
         }
     }
     Ok(numbers)
