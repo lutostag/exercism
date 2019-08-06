@@ -19,7 +19,7 @@ If everything goes well, you will be ready to fetch your first real exercise.
 Execute the tests with:
 
 ```bash
-$ elixir hello_world_test.exs
+$ mix test
 ```
 
 ### Pending tests
@@ -45,8 +45,9 @@ Or, you can enable all the tests by commenting out the
 # ExUnit.configure exclude: :pending, trace: true
 ```
 
-For more detailed information about the Elixir track, please
-see the [help page](http://exercism.io/languages/elixir).
+If you're stuck on something, it may help to look at some of
+the [available resources](https://exercism.io/tracks/elixir/resources)
+out there where answers might be found.
 
 ## Source
 
