@@ -1,31 +1,21 @@
-extern crate rand;
-
-use rand::Rng;
+use rand::{thread_rng, Rng};
 
 pub fn private_key(p: u64) -> u64 {
-    rand::thread_rng().gen_range(2, p)
+    thread_rng().gen_range(2, p)
 }
 
-/// https://en.wikipedia.org/wiki/Modular_exponentiation#cite_ref-schneier96p244_1-0
-pub fn public_key(p: u64, g: u64, a: u64) -> u64 {
-    let mut expo = a;
-    let mut base = g;
-    let mut result = 1;
+/// https://en.wikipedia.org/wiki/Modular_exponentiation#Pseudocode
+pub use public_key as secret;
+pub fn public_key(modulus: u64, base: u64, mut expo: u64) -> u64 {
+    let mut result: u64 = 1;
+    let mut base: u64 = base % modulus;
 
-    if p == 1 {
-        return 0;
-    }
-    base = base % p;
     while expo > 0 {
         if expo % 2 == 1 {
-            result = (result * base) % p;
+            result = result.checked_mul(base).unwrap() % modulus;
         }
-        expo = expo >> 1;
-        base = (base * base) % p;
+        base = base.checked_mul(base).unwrap() % modulus;
+        expo >>= 1;
     }
     result
-}
-
-pub fn secret(p: u64, b_pub: u64, a: u64) -> u64 {
-    public_key(p, b_pub, a)
 }
