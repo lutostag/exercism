@@ -1,5 +1,3 @@
-use std::mem::swap;
-
 pub struct CircularBuffer<T> {
     data: Vec<Option<T>>,
     used: usize,
@@ -35,12 +33,17 @@ impl<T> CircularBuffer<T> {
         self.writes == self.used
     }
 
+    pub fn clear(&mut self) {
+        self.used = 0;
+        self.writes = 0;
+    }
+
     pub fn write(&mut self, element: T) -> Result<(), Error> {
         if self.is_full() {
             Err(Error::FullBuffer)
         } else {
             let idx = index_then_increment(&mut self.writes, self.data.len());
-            swap(&mut self.data[idx], &mut Some(element));
+            self.data[idx].replace(element);
             Ok(())
         }
     }
@@ -50,15 +53,8 @@ impl<T> CircularBuffer<T> {
             Err(Error::EmptyBuffer)
         } else {
             let idx = index_then_increment(&mut self.used, self.data.len());
-            let mut value = None;
-            swap(&mut self.data[idx], &mut value);
-            Ok(value.unwrap())
+            Ok(self.data[idx].take().unwrap())
         }
-    }
-
-    pub fn clear(&mut self) {
-        self.used = 0;
-        self.writes = 0;
     }
 
     pub fn overwrite(&mut self, element: T) {
@@ -68,6 +64,6 @@ impl<T> CircularBuffer<T> {
         } else {
             index_then_increment(&mut self.writes, self.data.len())
         };
-        swap(&mut self.data[idx], &mut Some(element));
+        self.data[idx].replace(element);
     }
 }
