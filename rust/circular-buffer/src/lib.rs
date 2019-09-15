@@ -1,7 +1,8 @@
 pub struct CircularBuffer<T> {
     data: Vec<Option<T>>,
-    used: usize,
-    writes: usize,
+    front: usize,
+    back: usize,
+    size: usize,
 }
 
 #[derive(Debug, PartialEq)]
@@ -10,40 +11,37 @@ pub enum Error {
     FullBuffer,
 }
 
-fn index_then_increment(counter: &mut usize, modulo: usize) -> usize {
-    let idx = *counter % modulo;
-    *counter = (*counter).wrapping_add(1);
-    idx
-}
-
 impl<T> CircularBuffer<T> {
     pub fn new(capacity: usize) -> Self {
         CircularBuffer {
             data: (0..capacity).map(|_| None).collect(),
-            used: 0,
-            writes: 0,
+            front: 0,
+            back: 0,
+            size: 0,
         }
     }
 
     pub fn is_full(&self) -> bool {
-        self.used.wrapping_add(self.data.len()) == self.writes
+        self.size == self.data.len()
     }
 
     pub fn is_empty(&self) -> bool {
-        self.writes == self.used
+        self.size == 0
     }
 
     pub fn clear(&mut self) {
-        self.used = 0;
-        self.writes = 0;
+        self.back = 0;
+        self.front = 0;
+        self.size = 0;
     }
 
     pub fn write(&mut self, element: T) -> Result<(), Error> {
         if self.is_full() {
             Err(Error::FullBuffer)
         } else {
-            let idx = index_then_increment(&mut self.writes, self.data.len());
-            self.data[idx].replace(element);
+            self.data[self.front].replace(element);
+            self.front = (self.front + 1) % self.data.len();
+            self.size += 1;
             Ok(())
         }
     }
@@ -52,18 +50,22 @@ impl<T> CircularBuffer<T> {
         if self.is_empty() {
             Err(Error::EmptyBuffer)
         } else {
-            let idx = index_then_increment(&mut self.used, self.data.len());
-            Ok(self.data[idx].take().unwrap())
+            let value = self.data[self.back].take().unwrap();
+            self.back = (self.back + 1) % self.data.len();
+            self.size -= 1;
+            Ok(value)
         }
     }
 
     pub fn overwrite(&mut self, element: T) {
-        let idx = if self.is_full() {
-            index_then_increment(&mut self.writes, self.data.len());
-            index_then_increment(&mut self.used, self.data.len())
+        let mut idx = self.front;
+        self.front = (self.front + 1) % self.data.len();
+        if self.is_full() {
+            idx = self.back;
+            self.back = (self.back + 1) % self.data.len();
         } else {
-            index_then_increment(&mut self.writes, self.data.len())
-        };
+            self.size += 1;
+        }
         self.data[idx].replace(element);
     }
 }
