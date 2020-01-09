@@ -27,27 +27,15 @@ pub enum Error {
     InvalidWord,
 }
 
-/// Helper to create builtins pass in number of arguments (popped off the stack) and a closure
-/// that is called with the mutable stack, and those arguments. Closure must return a ForthResult
+/// Helper to create builtins. First arg passed in is the stack, the rest are popped off the
+/// stack in order (reversed) ending with a statment that must return (end with) a ForthResult
+/// example: builtin!(|s, z, y| Ok(s.push(y + z)))
 macro_rules! builtin {
-    ( 1, $( $func:expr )? ) => {
-        {
-            Operation::Builtin(Box::new(|stack: &mut Stack| {
-                let func = $( $func )?;
-                let z = stack.pop().ok_or(Error::StackUnderflow)?;
-                func(stack, z)
-            }))
-        }
-    };
-    ( 2, $( $func:expr )? ) => {
-        {
-            Operation::Builtin(Box::new(|stack: &mut Stack| {
-                let func = $( $func )?;
-                let z = stack.pop().ok_or(Error::StackUnderflow)?;
-                let y = stack.pop().ok_or(Error::StackUnderflow)?;
-                func(stack, y, z)
-            }))
-        }
+    ( | $stack:ident, $( $arg:ident ),* | $block:stmt ) => {
+        Operation::Builtin(Box::new(|$stack: &mut Stack| {
+            $( let $arg = $stack.pop().ok_or(Error::StackUnderflow)?; )*
+            $block
+        }))
     };
 }
 
@@ -58,19 +46,19 @@ fn is_number(token: &str) -> bool {
 impl Forth {
     pub fn new() -> Self {
         let builtins = hashmap! {
-            "+".to_string() => builtin!(2, |s: &mut Stack, y, z| Ok(s.push(y + z))),
-            "-".to_string() => builtin!(2, |s: &mut Stack, y, z| Ok(s.push(y - z))),
-            "*".to_string() => builtin!(2, |s: &mut Stack, y, z| Ok(s.push(y * z))),
-            "/".to_string() => builtin!(2, |s: &mut Stack, y, z| {
+            "+".to_string() => builtin!(|s, z, y| Ok(s.push(y + z))),
+            "-".to_string() => builtin!(|s, z, y| Ok(s.push(y - z))),
+            "*".to_string() => builtin!(|s, z, y| Ok(s.push(y * z))),
+            "/".to_string() => builtin!(|s, z, y| {
                 if z == 0 {
                     return Err(Error::DivisionByZero);
                 }
                 Ok(s.push(y / z))
             }),
-            "drop".to_string() => builtin!(1, |_, _| Ok(())),
-            "dup".to_string() => builtin!(1, |s: &mut Stack, z| Ok(s.append(&mut vec![z, z]))),
-            "swap".to_string() => builtin!(2, |s: &mut Stack, y, z| Ok(s.append(&mut vec![z, y]))),
-            "over".to_string() => builtin!(2, |s: &mut Stack, y, z| Ok(s.append(&mut vec![y, z, y]))),
+            "drop".to_string() => builtin!(|s, _z| Ok(())),
+            "dup".to_string() => builtin!(|s, z| Ok(s.append(&mut vec![z, z]))),
+            "swap".to_string() => builtin!(|s, z, y| Ok(s.append(&mut vec![z, y]))),
+            "over".to_string() => builtin!(|s, z, y| Ok(s.append(&mut vec![y, z, y]))),
         };
         Self {
             stack: Vec::new(),
