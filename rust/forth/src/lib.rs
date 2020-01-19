@@ -72,21 +72,21 @@ impl Forth {
 
     /// Tokenizes an input into evaluable Operations
     fn tokenize<'a>(&self, input: impl Iterator<Item = &'a str>) -> Result<Vec<Operation>, Error> {
-        let mut tokens = Vec::new();
+        let mut ops = Vec::new();
         for token in input {
-            match token {
-                _ if is_number(token) => tokens.push(Operation::Number(token.parse().unwrap())),
-                _ if self.definitions.contains_key(token) => {
-                    match self.definitions.get(token).unwrap() {
-                        builtin @ Operation::Builtin(_) => tokens.push(builtin.clone()),
-                        Operation::Definition(d) => tokens.append(&mut d.clone()),
-                        Operation::Number(_) => unreachable!(), // No definitions map directly to numbers
-                    }
+            if is_number(token) {
+                ops.push(Operation::Number(token.parse().unwrap()));
+            } else if let Some(op) = self.definitions.get(token) {
+                match op {
+                    builtin @ Operation::Builtin(_) => ops.push(builtin.clone()),
+                    Operation::Definition(d) => ops.append(&mut d.clone()),
+                    Operation::Number(_) => unreachable!(), // No definitions map directly to numbers
                 }
-                _ => return Err(Error::UnknownWord),
+            } else {
+                return Err(Error::UnknownWord);
             }
         }
-        Ok(tokens)
+        Ok(ops)
     }
 
     pub fn eval(&mut self, input: &str) -> ForthResult {
@@ -105,8 +105,8 @@ impl Forth {
             return Ok(());
         }
 
-        for token in self.tokenize(words)? {
-            match token {
+        for op in self.tokenize(words)? {
+            match op {
                 Operation::Number(n) => self.stack.push(n),
                 Operation::Builtin(f) => f(&mut self.stack)?,
                 Operation::Definition(_) => unreachable!(), // Already tokenized into other operations
